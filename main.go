@@ -37,7 +37,7 @@ func PostCreate(rw http.ResponseWriter, req *http.Request){
 }
 
 func PostUpdate(rw http.ResponseWriter, req *http.Request){
-	//id := strings.TrimSpace(chi.URLParam(req,""))
+	id := chi.URLParam(req,"Id")
 
 }
 
@@ -59,6 +59,7 @@ func PostDetail(rw http.ResponseWriter, req *http.Request){
 }
 
 func PostDelete(rw http.ResponseWriter, req *http.Request){
+	// Handler to delete a post from GolangBlog
 	id := chi.URLParam(req,"Id")
 	for i,v:=range blog.GolangBlog.Posts{
 		if id == v.Id{
