@@ -14,10 +14,6 @@ import (
 
 func index(rw http.ResponseWriter, req *http.Request) {
 	// handler for home/root page
-	if req.Method =="POST"{
-		rw.WriteHeader(406)
-		return
-	}
 	header:= rw.Header()
 	header.Add("Content-Type","text/html")
 	rw.WriteHeader(200)
