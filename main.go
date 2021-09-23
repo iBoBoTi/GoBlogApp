@@ -8,45 +8,78 @@ import (
 	"log"
 	"net/http"
 	"github.com/go-chi/chi/v5/middleware"
-	//"github.com/go-chi/chi"
+	"github.com/google/uuid"
+
 )
 
 
 func index(rw http.ResponseWriter, req *http.Request) {
-	// handler for home/root page
+	// handler for home/root page as well as display all post
 	header:= rw.Header()
 	header.Add("Content-Type","text/html")
 	rw.WriteHeader(200)
 
 	data:= blog.GolangBlog
 	tmpl, _ := template.ParseFiles("templates/index.html")
-	tmpl.Execute(rw, data)
+	err := tmpl.Execute(rw, data)
+	if err != nil {
+		return 
+	}
 }
 
 func PostCreate(rw http.ResponseWriter, req *http.Request){
+	// handler to present a form to add post to the user
 	tmpl, _ := template.ParseFiles("templates/create.html")
-	tmpl.Execute(rw, nil)
+	err := tmpl.Execute(rw, nil)
+	if err != nil {
+		return 
+	}
 }
 
-func PostUpdate(rw http.ResponseWriter, req *http.Request){}
+func PostUpdate(rw http.ResponseWriter, req *http.Request){
+	//id := strings.TrimSpace(chi.URLParam(req,""))
 
-func PostDetail(rw http.ResponseWriter, req *http.Request){}
+}
 
-func PostDelete(rw http.ResponseWriter, req *http.Request){}
+func PostDetail(rw http.ResponseWriter, req *http.Request){
+	// handler to retrieve a post and display it to the client
+	id := chi.URLParam(req,"Id")
+	var data blog.Post
+
+	for _,v:=range blog.GolangBlog.Posts{
+		if id == v.Id{
+			data = v
+		}
+	}
+	tmpl, _ := template.ParseFiles("templates/post_detail.html")
+	err := tmpl.Execute(rw,data)
+	if err != nil {
+		return 
+	}
+}
+
+func PostDelete(rw http.ResponseWriter, req *http.Request){
+	//id := strings.TrimSpace(chi.URLParam(req,""))
+}
 
 func AddFormHandler(rw http.ResponseWriter, req *http.Request){
+	// handler take the create post form and add to GolangBlog
 	req.ParseForm()
-	if req.Method != http.MethodPost{
-		return
+
+	if req.FormValue("Title") != "" && req.FormValue("Body") != ""{
+		post := blog.Post{
+			Id: uuid.NewString(),
+			Title: req.FormValue("Title"),
+			Body: req.FormValue("Body"),
+		}
+		blog.GolangBlog.Posts = append(blog.GolangBlog.Posts,post)
 	}
-	post := blog.Post{
-		Title: req.FormValue("Title"),
-		Body: req.FormValue("Body"),
-	}
-	blog.GolangBlog.Posts = append(blog.GolangBlog.Posts,post)
 
 	tmpl, _ := template.ParseFiles("templates/post_confirm.html")
-	tmpl.Execute(rw, nil)
+	err := tmpl.Execute(rw, nil)
+	if err != nil {
+		return 
+	}
 }
 
 
@@ -59,9 +92,9 @@ func main() {
 	r.Get("/",index)
 	r.Get("/create",PostCreate)
 	r.Post("/add", AddFormHandler)
-	http.HandleFunc("/edit", PostUpdate)
-	http.HandleFunc("/detail", PostDetail)
-	http.HandleFunc("/delete", PostDelete)
+	r.Put("/post/{Id}", PostUpdate)
+	r.Get("/{Id}", PostDetail)
+	r.Delete("/post/{Id}", PostDelete)
 
 	fmt.Println("Starting server at port 8080")
 	err := http.ListenAndServe(":8080", r)
