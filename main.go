@@ -59,7 +59,13 @@ func PostDetail(rw http.ResponseWriter, req *http.Request){
 }
 
 func PostDelete(rw http.ResponseWriter, req *http.Request){
-	//id := strings.TrimSpace(chi.URLParam(req,""))
+	id := chi.URLParam(req,"Id")
+	for i,v:=range blog.GolangBlog.Posts{
+		if id == v.Id{
+			blog.GolangBlog.Posts = append(blog.GolangBlog.Posts[:i],blog.GolangBlog.Posts[i+1:]...)
+		}
+	}
+	http.Redirect(rw,req,"/",301)
 }
 
 func AddFormHandler(rw http.ResponseWriter, req *http.Request){
@@ -94,7 +100,7 @@ func main() {
 	r.Post("/add", AddFormHandler)
 	r.Put("/post/{Id}", PostUpdate)
 	r.Get("/{Id}", PostDetail)
-	r.Delete("/post/{Id}", PostDelete)
+	r.Get("/post/{Id}", PostDelete)
 
 	fmt.Println("Starting server at port 8080")
 	err := http.ListenAndServe(":8080", r)
