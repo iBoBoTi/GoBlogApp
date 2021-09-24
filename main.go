@@ -130,7 +130,7 @@ func UpdateHandler(rw http.ResponseWriter, req *http.Request){
 			}
 		}
 	}
-	http.Redirect(rw,req,"/"+id,http.StatusAccepted)
+	http.Redirect(rw,req,"/"+id,http.StatusMovedPermanently)
 
 }
 
