@@ -17,7 +17,7 @@ func index(rw http.ResponseWriter, req *http.Request) {
 	// handler for home/root page as well as display all post
 	header:= rw.Header()
 	header.Add("Content-Type","text/html")
-	rw.WriteHeader(200)
+	rw.WriteHeader(http.StatusOK)
 
 	data:= blog.GolangBlog
 	tmpl, _ := template.ParseFiles("templates/index.html")
@@ -39,10 +39,28 @@ func PostCreate(rw http.ResponseWriter, req *http.Request){
 func PostUpdate(rw http.ResponseWriter, req *http.Request){
 	id := chi.URLParam(req,"Id")
 
+	var data blog.Post
+
+	for _,v:=range blog.GolangBlog.Posts{
+		if id == v.Id{
+			data = v
+		}
+	}
+	tmpl, _ := template.ParseFiles("templates/edit_post.html")
+	err := tmpl.Execute(rw,data)
+	if err != nil {
+		return
+	}
+
+
 }
 
 func PostDetail(rw http.ResponseWriter, req *http.Request){
 	// handler to retrieve a post and display it to the client
+	header:= rw.Header()
+	header.Add("Content-Type","text/html")
+	rw.WriteHeader(http.StatusOK)
+
 	id := chi.URLParam(req,"Id")
 	var data blog.Post
 
@@ -66,11 +84,15 @@ func PostDelete(rw http.ResponseWriter, req *http.Request){
 			blog.GolangBlog.Posts = append(blog.GolangBlog.Posts[:i],blog.GolangBlog.Posts[i+1:]...)
 		}
 	}
-	http.Redirect(rw,req,"/",301)
+	http.Redirect(rw,req,"/",http.StatusMovedPermanently)
 }
 
 func AddFormHandler(rw http.ResponseWriter, req *http.Request){
 	// handler take the create post form and add to GolangBlog
+	header:= rw.Header()
+	header.Add("Content-Type","text/html")
+	rw.WriteHeader(http.StatusCreated)
+
 	req.ParseForm()
 
 	if req.FormValue("Title") != "" && req.FormValue("Body") != ""{
@@ -90,6 +112,29 @@ func AddFormHandler(rw http.ResponseWriter, req *http.Request){
 }
 
 
+func UpdateHandler(rw http.ResponseWriter, req *http.Request){
+	id := chi.URLParam(req,"Id")
+
+	req.ParseForm()
+
+	if req.FormValue("Title") != "" && req.FormValue("Body") != ""{
+		post := blog.Post{
+			Id: id,
+			Title: req.FormValue("Title"),
+			Body: req.FormValue("Body"),
+		}
+
+		for i,v:=range blog.GolangBlog.Posts{
+			if post.Id == v.Id{
+				blog.GolangBlog.Posts[i] = post
+			}
+		}
+	}
+	http.Redirect(rw,req,"/"+id,http.StatusAccepted)
+
+}
+
+
 func main() {
 	r := chi.NewRouter()
 
@@ -99,9 +144,10 @@ func main() {
 	r.Get("/",index)
 	r.Get("/create",PostCreate)
 	r.Post("/add", AddFormHandler)
-	r.Put("/post/{Id}", PostUpdate)
+	r.Get("/update/{Id}", PostUpdate)
+	r.Post("/postupdate/{Id}", UpdateHandler)
 	r.Get("/{Id}", PostDetail)
-	r.Get("/post/{Id}", PostDelete)
+	r.Get("/delete/{Id}", PostDelete)
 
 	fmt.Println("Starting server at port 8080")
 	err := http.ListenAndServe(":8080", r)

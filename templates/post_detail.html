@@ -15,7 +15,7 @@
 <div class="card">
     <h3 class="card-title">{{ .Title }}</h3>
     <p>{{ .Body }}</p>
-    <button>Edit</button><button><a href="/post/{{ .Id }}">Delete</a></button>
+    <a href="/update/{{ .Id }}" >Edit</a><a href="/delete/{{ .Id }}">Delete</a>
 </div>
 
 </body>
